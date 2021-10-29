@@ -4,6 +4,7 @@ import sys
 from pyfiglet import Figlet
 from pick import pick
 import time
+import subprocess
 
 
 # Variables
@@ -58,7 +59,8 @@ def launch_selection():
     options = os.listdir(qsc_root_path)
     option, index = pick(options, title)
     try:
-        os.startfile(f'{qsc_root_path}/{option}/Q-Sys Designer.exe')
+        # os.startfile(f'{qsc_root_path}/{option}/Q-Sys Designer.exe')
+        subprocess.Popen([f'{qsc_root_path}/{option}/Q-Sys Designer.exe', file_to_open])
     except FileNotFoundError:
         try:
             os.startfile(f'{qsc_root_path}/{option}/uci.exe')

@@ -12,11 +12,14 @@ program_version = 'v0.0.1[alpha]'
 programfiles = os.environ['PROGRAMFILES']
 qsc_root_path = f'{programfiles}/QSC'
 
+global file_passed_input
+
 # Try to asign the file if any
 try:
     file_to_open = sys.argv[1]
 except IndexError:
     print(f'File not indicated to open, moving to standard launcher.')
+    file_passed_input = False
     pass
 
 
@@ -45,12 +48,11 @@ def startup_initilize():
     print(title_heading.renderText('Q-Sys Launcher'))
     print(program_version)
     print('Author: Zach Lisko')
-    print('Copyright (C) 2021, Zach Lisko')
     print('')
     print('')
     print('')
     print('')
-    time.sleep(3)
+    time.sleep(1)
 
 
 # Launch with Selected Options
@@ -58,16 +60,18 @@ def launch_selection():
     title = 'Please select the version of Q-SYS Designer you wish to launch.'
     options = os.listdir(qsc_root_path)
     option, index = pick(options, title)
-    try:
-        # os.startfile(f'{qsc_root_path}/{option}/Q-Sys Designer.exe')
-        subprocess.Popen([f'{qsc_root_path}/{option}/Q-Sys Designer.exe', file_to_open])
-    except FileNotFoundError:
+    if file_to_open:
         try:
-            os.startfile(f'{qsc_root_path}/{option}/uci.exe')
+            subprocess.Popen([f'{qsc_root_path}/{option}/Q-Sys Designer.exe', file_to_open])
         except FileNotFoundError:
-            os.startfile(f'{qsc_root_path}/{option}/Q-Sys Administrator.exe')
-        else:
-            pass
+            try:
+                os.startfile(f'{qsc_root_path}/{option}/uci.exe')
+            except FileNotFoundError:
+                os.startfile(f'{qsc_root_path}/{option}/Q-Sys Administrator.exe')
+            else:
+                pass
+    else:
+        os.startfile(f'{qsc_root_path}/{option}/Q-Sys Designer.exe')
 
 
 

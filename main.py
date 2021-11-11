@@ -52,7 +52,7 @@ def startup_initilize():
     print('')
     print('')
     print('')
-    time.sleep(1)
+    time.sleep(.5)
 
 
 # Launch with Selected Options

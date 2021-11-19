@@ -82,7 +82,7 @@ if __name__ == "__main__":
     # startup_initilize(program_version)
     # if file_to_open():
     # Create the Window
-    window = sg.Window('Q-Launcher', version_selection, element_justification='c')
+    window = sg.Window('Q-Launcher', version_selection, element_justification='c', icon='screenshots\logo_OEB_icon.ico')
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
         event, values = window.read()

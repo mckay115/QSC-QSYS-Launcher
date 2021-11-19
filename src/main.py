@@ -8,7 +8,7 @@ import PySimpleGUI as sg
 
 
 # Variables
-program_version = 'v0.0.1[alpha]'
+program_version = 'v0.5[beta]'
 programfiles = os.environ['PROGRAMFILES']
 qsc_root_path = f'{programfiles}/QSC'
 sg.theme('DarkGrey6')

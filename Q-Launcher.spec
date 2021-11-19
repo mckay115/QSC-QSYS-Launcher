@@ -2,15 +2,13 @@
 
 
 block_cipher = None
-import os
-import pyfiglet.fonts
 
 
-a = Analysis(['main.py'],
-             pathex=['C:\\Users\\zlisko\\OneDrive - Lamacchia Group\\Desktop\\qsys-catcher'],
+a = Analysis(['src\\main.py'],
+             pathex=['C:\\Users\\zlisko\\OneDrive - Lamacchia Group\\Desktop\\qsys-catcher\\QSC-QSYS-Launcher'],
              binaries=[],
-             datas=[(os.path.join(os.path.dirname(pyfiglet.fonts.__file__), "*.f*"), os.path.join("pyfiglet", "fonts"))],
-             hiddenimports=['pyfiglet', 'pyfiglet.fonts'],
+             datas=[],
+             hiddenimports=[],
              hookspath=[],
              hooksconfig={},
              runtime_hooks=[],
@@ -28,15 +26,15 @@ exe = EXE(pyz,
           a.zipfiles,
           a.datas,  
           [],
-          name='Q-Sys Launcher',
+          name='Q-Launcher',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
           upx_exclude=[],
           runtime_tmpdir=None,
-          console=True,
+          console=False,
           disable_windowed_traceback=False,
           target_arch=None,
           codesign_identity=None,
-          entitlements_file=None )
+          entitlements_file=None , icon='screenshots\\logo_OEB_icon.ico')

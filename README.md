@@ -1,4 +1,4 @@
-# QSC-QSYS Launcher
+# QSC-QSYS Version Selection Launcher
  Launcher program to select which version of the Q-Sys software to launch.
 
 ![screenshot](https://github.com/mckay115/QSC-QSYS-Launcher/blob/main/screenshots/icon.png?raw=true)

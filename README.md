@@ -4,7 +4,7 @@
 ![screenshot](https://github.com/mckay115/QSC-QSYS-Launcher/blob/main/screenshots/icon.png?raw=true)
  -->
  <p align="center">
-  <img src="https://github.com/mckay115/QSC-QSYS-Launcher/blob/main/screenshots/icon.png?raw=true" />
+  <img src="https://github.com/mckay115/QSC-QSYS-Launcher/blob/main/screenshots/icon-small.png?raw=true" />
 </p>
 
  

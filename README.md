@@ -2,8 +2,14 @@
  Launcher program to select which version of the Q-Sys software to launch.
 
 ![screenshot](https://github.com/mckay115/QSC-QSYS-Launcher/blob/main/screenshots/icon.png?raw=true)
-
+ 
+ 
+ 
 ![screenshot](https://raw.githubusercontent.com/mckay115/QSC-QSYS-Launcher/main/screenshots/choice2.png?token=ABXNU2J4JIVAESPW6NSTDMLBQU3ES)
+
+
+---
+
 
 ## Instructions
 
@@ -14,10 +20,11 @@
 - To open any file from that point simply double click the file and it will prompt you to select which version of Q-Sys Designer to use from your installed versions.
 
 
-
+---
 ## Project Goals:
 
 - Simplify interactions with multiple versions of Designer and multiple versions of firmware on installs.
+    - [] When opening a file directly, only show compatible programs to open with (if opening a design file, only show designer versions to open with)
 - Create a tool that adds design managment and version coordination to the Q-Sys Designer Application
     - Create Project
         - Project Info/Settings:

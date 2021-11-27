@@ -93,7 +93,7 @@ version_selection = [  [sg.Text('Select the version to open:')],
 
 project_selection = [
     [sg.Text('Projects'), sg.Button('New Project'), sg.Button('Import')],
-    [sg.Listbox(values=['Listbox 1', 'Listbox 2', 'Listbox 3'], size=(30, 6))]
+    [sg.Listbox(values=['Listbox 1', 'Listbox 2', 'Listbox 3'], size=(30, 7))]
 ]
 projects_info = [
     [sg.Text('Project Name:')],

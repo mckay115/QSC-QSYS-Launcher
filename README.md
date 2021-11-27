@@ -34,7 +34,7 @@
 ## Project Goals:
 
 - Simplify interactions with multiple versions of Designer and multiple versions of firmware on installs.
-    - [ ] When opening a file directly, only show compatible programs to open with (if opening a design file, only show designer versions to open with)
+    - [x] When opening a file directly, only show compatible programs to open with (if opening a design file, only show designer versions to open with)
 - Create a tool that adds design managment and version coordination to the Q-Sys Designer Application
     - Create Project
         - Project Info/Settings:

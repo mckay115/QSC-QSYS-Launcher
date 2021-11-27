@@ -24,9 +24,17 @@ def file_to_open():
         print("no argument")
         return False
 
+def filter_dict(list, filter_string):
+    if filter_string in list:
+        return True
+    else:
+        return False
+
+
 # Check for Installed Versions
-def check_installed_versions():
+def check_installed_versions(filter="Designer"):
     versions = os.listdir(qsc_root_path)
+    filtered_versions = []
     for item in versions:
         if os.path.isfile(f'{qsc_root_path}/{item}/Q-Sys Designer.exe'):
             print(f'{item} is Installed')
@@ -36,7 +44,13 @@ def check_installed_versions():
             print(f'{item} is Installed')
         else:
             print(f'Application folder found but {item} not Installed.')
-    return versions
+    # filtered_versions = filter(filter_dict(d, some_string), versions)
+    for item in versions:
+        if filter in item:
+            filtered_versions.append(item)
+        else:
+            pass
+    return filtered_versions
 
 
 
@@ -67,7 +81,7 @@ def startup_initilize(program_version):
 
 
 # GUI Setup
-versions = os.listdir(qsc_root_path)
+versions = check_installed_versions()
 version_count = 0
 for item in versions:
     version_count = version_count + 1

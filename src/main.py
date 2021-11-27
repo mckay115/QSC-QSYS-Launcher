@@ -91,12 +91,30 @@ for item in versions:
 version_selection = [  [sg.Text('Select the version to open:')],
            *[[sg.Button(f'{versions[i]}')] for i in range(version_count)]]
 
+project_selection = [
+    [sg.Text('Projects'), sg.Button('New Project'), sg.Button('Import')],
+    [sg.Listbox(values=['Listbox 1', 'Listbox 2', 'Listbox 3'], size=(30, 6))]
+]
+projects_info = [
+    [sg.Text('Project Name:')],
+    [sg.Text('Client Name:')],
+    [sg.Text('Project Version:')],
+    [sg.Text('Designer Version:')],
+    [sg.Text('Last Updated:')],
+    [sg.Button('Open'), sg.Button('Export Project')]
+]
+
+projects_page = [
+    [sg.Frame('Project Selection', project_selection, font='Any 12'), sg.Frame('Project Info', projects_info, font='Any 12')]
+]
+
 # Main Program Sequence
 if __name__ == "__main__":
     # startup_initilize(program_version)
     # if file_to_open():
     # Create the Window
-    window = sg.Window('Q-Launcher', version_selection, element_justification='c', icon='screenshots\logo_OEB_icon.ico')
+    # window = sg.Window('Q-Launcher', version_selection, element_justification='c', icon='screenshots\logo_OEB_icon.ico')
+    window = sg.Window('Q-Launch', projects_page, icon='screenshots\logo_OEB_icon.ico')
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
         event, values = window.read()

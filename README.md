@@ -52,3 +52,17 @@
             - Create copied versions in a "repository" with proper version numbering
         - Allow "safe" upgrades between versions
             - Save a version of the file to be updated both before and after the version is updated and saved in Designer. Include proper version info in the name to identify the designer version.
+
+---
+
+# Active Development Notes:
+
+create a project folder with the following folder Structure
+
+- {USER DOCS FOLDER}
+  - QSYS Projects (`This is a created folder by the launcher`)
+    - %PROJECT FOLDER ROOT NAME%
+      - %PROJECT FOLDER ROOT NAME%.qsys
+      - Resources Folder
+      - Project Info (Markdown File)
+      - .backup-rev (`This is a created folder by the launcher`)

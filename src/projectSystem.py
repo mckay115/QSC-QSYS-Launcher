@@ -7,7 +7,6 @@ class Project:
     #initilization of the project with the name and the path located in a folder named QSYS-Projects
     def __init__(self, name):
         self.name = name
-        # self.path = f'./{rootProjectDir}/{name}'
         self.path = f'{name}'
         self.files = []
         self.folders = []
@@ -33,10 +32,10 @@ class Project:
 
     def createProjectReadme(self):
         with open('README.md', 'w') as readme:
-            readme.write(f'# {self.name}\n')
-            readme.write(f'Path: {self.path}\n')
-            readme.write(f'Files: {self.files}\n')
-            readme.write(f'Folders: {self.folders}\n')
+            readme.write(f'# {self.name}\n\n')
+            readme.write(f'Path: `{self.path}`\n\n')
+            readme.write(f'Files: `{self.files}`\n\n')
+            readme.write(f'Folders: `{self.folders}`\n')
 
 if __name__ == "__main__":
     project = Project(input('Project Name: '))

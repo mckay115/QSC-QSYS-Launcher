@@ -6,7 +6,8 @@ from pick import pick
 import subprocess
 import PySimpleGUI as sg
 
-from main import qsc_root_path, file_to_open
+programfiles = os.environ['PROGRAMFILES']
+qsc_root_path = f'{programfiles}/QSC'
 
 # Try to asign the file if any
 def file_to_open():

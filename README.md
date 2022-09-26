@@ -18,6 +18,10 @@
 
 ---
 
+# Prototype Interface
+
+![screenshot](/screenshots/conceptProjectLaunchWindow.png)
+
 
 ## Instructions
 

@@ -15,12 +15,6 @@ programfiles = os.environ['PROGRAMFILES']
 qsc_root_path = f'{programfiles}/QSC'
 sg.theme('DefaultNoMoreNagging')
 
-# Startup Functions Called
-# def startup_initilize(program_version):
-#     print('Q-Launcher')
-#     print(program_version)
-#     print('Author: Zach Lisko')
-
 
 # GUI Setup
 versions = check_installed_versions()

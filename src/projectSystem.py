@@ -1,7 +1,10 @@
 import os
 
 
-rootProjectDir = "QSYS-Projects"
+# rootProjectDir = "QSYS-Projects"
+documentsFolder = os.environ['HOMEPATH'] + "/Documents"
+qscDocsFolder = documentsFolder + "/QSC"
+rootProjectDir = qscDocsFolder + "/Q-Sys Projects"
 
 class Project:
     #initilization of the project with the name and the path located in a folder named QSYS-Projects

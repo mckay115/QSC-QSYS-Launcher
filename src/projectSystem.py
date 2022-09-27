@@ -33,6 +33,22 @@ class Project:
                 open(file, 'w')
             self.createProjectReadme()
 
+    def removeProject(self):
+        if os.path.exists(rootProjectDir):
+            os.chdir(rootProjectDir)
+            if os.path.exists(self.path):
+                os.chdir(self.path)
+                for file in self.files:
+                    os.remove(file)
+                for folder in self.folders:
+                    os.rmdir(folder)
+                os.chdir(rootProjectDir)
+                os.rmdir(self.path)
+            else:
+                print(f'Project {self.name} does not exist')
+        else:
+            print(f'Project {self.name} does not exist')
+
     def createProjectReadme(self):
         with open('README.md', 'w') as readme:
             readme.write(f'# {self.name}\n\n')
@@ -40,8 +56,24 @@ class Project:
             readme.write(f'Files: `{self.files}`\n\n')
             readme.write(f'Folders: `{self.folders}`\n')
 
+
+class ProjectManager:
+    def __init__(self):
+        self.projects = self.listProjects()
+
+    def listProjects(self):
+        if os.path.exists(rootProjectDir):
+            os.chdir(rootProjectDir)
+            return os.listdir()
+        else:
+            print('No projects found')
+
 if __name__ == "__main__":
     project = Project(input('Project Name: '))
     project.folders = ["resources", ".backup-rev"]
     project.files = ["testproject.qsys", "Readme.md"]
     project.createProject()
+    projectManager = ProjectManager()
+    print(projectManager.projects)
+    project.removeProject()
+    print(projectManager.projects)

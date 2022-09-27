@@ -31,7 +31,7 @@ for item in versions:
 
 # GUI Layouts
 version_selection = [  
-    [sg.Text('Select the version to open:')],
+    [sg.Text('Select Designer version to open:')],
     *[[sg.Button(f'{versions[i]}')] for i in range(version_count)],
     [sg.Text('Other Applications:')],
     [sg.Button('Administrator'), sg.Button('UCI Viewer')]
@@ -53,11 +53,11 @@ if __name__ == "__main__":
             currentVersion = versions[-1].split()
             currentVersion = currentVersion[-1]
             open_administrator(f'Q-SYS Administrator {currentVersion}')
-            sleep(1)
+            sleep(3)
             break
         elif event == 'UCI Viewer':
             open_uciViewer()
-            sleep(1)
+            sleep(3)
             break
         else:
             print(f'Opening the selected version of application: {event}')

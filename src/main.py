@@ -10,76 +10,16 @@ from qsysDesigner import *
 
 
 # Variables
-program_version = 'v0.5[beta]'
+program_version = 'v0.6[beta]'
 programfiles = os.environ['PROGRAMFILES']
 qsc_root_path = f'{programfiles}/QSC'
-sg.theme('DarkGrey6')
-
-
-# # Try to asign the file if any
-# def file_to_open():
-#     print('checking')
-#     if len(sys.argv) > 1:
-#         print("argument")
-#         return True
-#     else:
-#         print("no argument")
-#         return False
-
-# def filter_dict(list, filter_string):
-#     if filter_string in list:
-#         return True
-#     else:
-#         return False
-
-
-# # Check for Installed Versions
-# def check_installed_versions(filter="Designer"):
-#     versions = os.listdir(qsc_root_path)
-#     filtered_versions = []
-#     for item in versions:
-#         if os.path.isfile(f'{qsc_root_path}/{item}/Q-Sys Designer.exe'):
-#             print(f'{item} is Installed')
-#         elif os.path.isfile(f'{qsc_root_path}/{item}/uci.exe'):
-#             print(f'{item} is Installed')
-#         elif os.path.isfile(f'{qsc_root_path}/{item}/Q-Sys Administrator.exe'):
-#             print(f'{item} is Installed')
-#         else:
-#             print(f'Application folder found but {item} not Installed.')
-#     # filtered_versions = filter(filter_dict(d, some_string), versions)
-#     for item in versions:
-#         if filter in item:
-#             filtered_versions.append(item)
-#         else:
-#             pass
-#     return filtered_versions
-
-
-
-# # Launch with Selected Options
-# def open_design_file(option):
-#     if file_to_open():
-#         file = sys.argv[1]
-#         try:
-#             subprocess.Popen([f'{qsc_root_path}/{option}/Q-Sys Designer.exe', file])
-#         except FileNotFoundError:
-#             try:
-#                 os.startfile(f'{qsc_root_path}/{option}/uci.exe')
-#             except FileNotFoundError:
-#                 os.startfile(f'{qsc_root_path}/{option}/Q-Sys Administrator.exe')
-#             else:
-#                 pass
-#     else:
-#         subprocess.Popen([f'{qsc_root_path}/{option}/Q-Sys Designer.exe'])
-
-# def open_application(option):
-#     subprocess.Popen([f'{qsc_root_path}/{option}/Q-Sys Designer.exe'])
+sg.theme('DefaultNoMoreNagging')
 
 # Startup Functions Called
-def startup_initilize(program_version):
-    print('Q-Launcher')
-    print(program_version)
-    print('Author: Zach Lisko')
+# def startup_initilize(program_version):
+#     print('Q-Launcher')
+#     print(program_version)
+#     print('Author: Zach Lisko')
 
 
 # GUI Setup
@@ -90,8 +30,12 @@ for item in versions:
 
 
 # GUI Layouts
-version_selection = [  [sg.Text('Select the version to open:')],
-           *[[sg.Button(f'{versions[i]}')] for i in range(version_count)]]
+version_selection = [  
+    [sg.Text('Select the version to open:')],
+    *[[sg.Button(f'{versions[i]}')] for i in range(version_count)],
+    [sg.Text('Other Applications:')],
+    [sg.Button('Administrator'), sg.Button('UCI Viewer')]
+    ]
 
 # Main Program Sequence
 if __name__ == "__main__":
@@ -102,11 +46,23 @@ if __name__ == "__main__":
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
         event, values = window.read()
+        print(f'event:{event}, value:{values}')
         if event == sg.WIN_CLOSED: # if user closes window or clicks cancel
+            break
+        elif event == 'Administrator':
+            currentVersion = versions[-1].split()
+            currentVersion = currentVersion[-1]
+            open_administrator(f'Q-SYS Administrator {currentVersion}')
+            sleep(1)
+            break
+        elif event == 'UCI Viewer':
+            open_uciViewer()
+            sleep(1)
             break
         else:
             print(f'Opening the selected version of application: {event}')
             open_design_file(event)
+            # open_application(event)
             sleep(3)
             break
 

@@ -1,4 +1,5 @@
 # All imports for the project
+from email.mime import application
 import os
 import sys
 from time import sleep, time
@@ -6,8 +7,8 @@ from pick import pick
 import subprocess
 import PySimpleGUI as sg
 
-programfiles = os.environ['PROGRAMFILES']
-qsc_root_path = f'{programfiles}/QSC'
+programFiles = os.environ['PROGRAMFILES']
+qsc_root_path = f'{programFiles}/QSC'
 
 # Try to asign the file if any
 def file_to_open():
@@ -66,4 +67,16 @@ def open_design_file(option):
         subprocess.Popen([f'{qsc_root_path}/{option}/Q-Sys Designer.exe'])
 
 def open_application(option):
-    subprocess.Popen([f'{qsc_root_path}/{option}/Q-Sys Designer.exe'])
+    application = f'{qsc_root_path}/{option}/Q-Sys Designer.exe'
+    subprocess.Popen([application])
+
+def open_uciViewer():
+    print('Opening UCI Viewer')
+    uciViewer = f'{qsc_root_path}/Q-SYS UCI Viewer/uci.exe'
+    print(uciViewer)
+    subprocess.Popen([uciViewer])
+
+def open_administrator(option):
+    administrator = f'{qsc_root_path}/{option}/Q-Sys Administrator.exe'
+    print(administrator)
+    subprocess.Popen([administrator])

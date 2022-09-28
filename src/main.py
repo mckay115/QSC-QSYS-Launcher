@@ -1,111 +1,177 @@
 # All imports for the project
 import os
-import sys
 from time import sleep, time
 from pick import pick
-import subprocess
 import PySimpleGUI as sg
+
+from qsysDesigner import *
+
+from projectSystem import *
+
+# from userInterface import version_selection, actionButtons, projectWindow, projectInfoPane
+from userInterface import layout
 
 
 # Variables
-program_version = 'v0.5[beta]'
-programfiles = os.environ['PROGRAMFILES']
-qsc_root_path = f'{programfiles}/QSC'
-sg.theme('DarkGrey6')
+program_version = 'v0.6[beta]'
+programFiles = os.environ['PROGRAMFILES']
+qsc_root_path = f'{programFiles}/QSC'
+sg.theme('DefaultNoMoreNagging')
 
 
-# Try to asign the file if any
-def file_to_open():
-    print('checking')
-    if len(sys.argv) > 1:
-        print("argument")
-        return True
-    else:
-        print("no argument")
-        return False
-
-def filter_dict(list, filter_string):
-    if filter_string in list:
-        return True
-    else:
-        return False
+# projectSystem = ProjectSystem()
+# projectList = projectSystem.projects
 
 
-# Check for Installed Versions
-def check_installed_versions(filter="Designer"):
-    versions = os.listdir(qsc_root_path)
-    filtered_versions = []
-    for item in versions:
-        if os.path.isfile(f'{qsc_root_path}/{item}/Q-Sys Designer.exe'):
-            print(f'{item} is Installed')
-        elif os.path.isfile(f'{qsc_root_path}/{item}/uci.exe'):
-            print(f'{item} is Installed')
-        elif os.path.isfile(f'{qsc_root_path}/{item}/Q-Sys Administrator.exe'):
-            print(f'{item} is Installed')
-        else:
-            print(f'Application folder found but {item} not Installed.')
-    # filtered_versions = filter(filter_dict(d, some_string), versions)
-    for item in versions:
-        if filter in item:
-            filtered_versions.append(item)
-        else:
-            pass
-    return filtered_versions
+# # GUI Setup
+# versions = check_installed_versions()
+# version_count = 0
+# for item in versions:
+#     version_count = version_count + 1
 
 
+# # GUI Layouts
+# version_selection = [
+#     [sg.Text('Select Designer version to open:')],
+#     *[[sg.Button(f'{versions[i]}')] for i in range(version_count)],
+#     [sg.Text('Other Applications:')],
+#     [sg.Button('Administrator'), sg.Button('UCI Viewer')]
+#     ]
 
-# Launch with Selected Options
-def open_design_file(option):
-    if file_to_open():
-        file = sys.argv[1]
-        try:
-            subprocess.Popen([f'{qsc_root_path}/{option}/Q-Sys Designer.exe', file])
-        except FileNotFoundError:
-            try:
-                os.startfile(f'{qsc_root_path}/{option}/uci.exe')
-            except FileNotFoundError:
-                os.startfile(f'{qsc_root_path}/{option}/Q-Sys Administrator.exe')
-            else:
-                pass
-    else:
-        subprocess.Popen([f'{qsc_root_path}/{option}/Q-Sys Designer.exe'])
+# actionButtons = [
+#         [
+#             sg.Button('Open Folder', key='-OPENFOLDER-'),
+#             sg.Button('Open Design', key='-OPENDESIGN-'),
+#         ],
+# ]
 
-def open_application(option):
-    subprocess.Popen([f'{qsc_root_path}/{option}/Q-Sys Designer.exe'])
+# projectWindow = [
+#         [
+#             sg.Text('Project List:'),
+#             sg.Button('Refresh'),
+#         ],
+#         [
+#             sg.Listbox(projectList, enable_events=True, size=(35, 15), key='-FILELIST-'),
+#         ],
+#         [
+#             sg.Button('Import'),
+#             sg.Button('Export'),
+#             sg.Push(),
+#             sg.Button('New', key='-NEWPROJECT-'),
+#         ],
+#     ]
 
-# Startup Functions Called
-def startup_initilize(program_version):
-    print('Q-Launcher')
-    print(program_version)
-    print('Author: Zach Lisko')
+# projectInfoPane = [
+#         [
+#             sg.Text('Project Information:'),
+#         ],
+#         [
+#             sg.Text('Project Name:'),
+#             sg.InputText(key='-PROJECTNAME-', s=35),
+#         ],
+#         [
+#             sg.Text('Project Number:'),
+#             sg.InputText(key='-PROJECTNUMBER-', s=35),
+#         ],
+#         [
+#             sg.Text('Project City:'),
+#             sg.InputText(key='-PROJECTCITY-', s=35),
+#         ],
+#         [
+#             sg.Text('Project State:'),
+#             sg.InputText(key='-PROJECTSTATE-', s=35),
+#         ],
+#         [
+#             sg.Text('Designer Version:'),
+#             sg.InputText(key='-DESIGNERVERSION-', s=35),
+#         ],
+#         [
+#             sg.Text('Design File Revision:'),
+#             sg.InputText(key='-DESIGNFILE-', s=35),
+#         ],
+#         [
+#             sg.Text('File Revision Date:'),
+#             sg.InputText(key='-DESIGNFILEDATE-', s=35),
+#         ],
+#         [
+#             sg.Text('Author:'),
+#             sg.InputText(key='-AUTHOR-', s=35),
+#         ],
+#         [
+#             sg.Button('Update Project Info', key='-UPDATEPROJECTINFO-'),
+#         ],
+#     ]
 
-
-# GUI Setup
-versions = check_installed_versions()
-version_count = 0
-for item in versions:
-    version_count = version_count + 1
-
-
-# GUI Layouts
-version_selection = [  [sg.Text('Select the version to open:')],
-           *[[sg.Button(f'{versions[i]}')] for i in range(version_count)]]
+# layout = [
+#     [
+#         sg.Column(projectWindow, element_justification='l', vertical_alignment='t'),
+#         sg.VSeperator(),
+#         sg.Column(projectInfoPane, element_justification='r', vertical_alignment='t'),
+#     ],
+#     [
+#         sg.Push(),
+#         sg.Button('Open Folder', key='-OPENFOLDER-'),
+#         sg.Button('Open Design', key='-OPENDESIGN-'),
+#     ],
+# ]
 
 # Main Program Sequence
 if __name__ == "__main__":
-    # startup_initilize(program_version)
-    # if file_to_open():
     # Create the Window
-    window = sg.Window('Q-Launcher', version_selection, element_justification='c', icon='screenshots\logo_OEB_icon.ico')
+    window = sg.Window('Q-Launcher', layout, icon='./screenshots/logo_OEB_icon.ico')
+    projectSystem = ProjectSystem()
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
         event, values = window.read()
         if event == sg.WIN_CLOSED: # if user closes window or clicks cancel
             break
-        else:
-            print(f'Opening the selected version of application: {event}')
-            open_design_file(event)
-            sleep(3)
-            break
+        elif event == '-NEWPROJECT-':
+            print('New Project')
+            projectSystem.createProject('Template Project')
+            sleep(1)
+            projectList = projectSystem.listProjects()
+            window['-FILELIST-'].update(projectList)
+        elif event == 'Refresh':
+            projectList = projectSystem.listProjects()
+            window['-FILELIST-'].update(projectList)
+            print('Refresh')
+        elif event == '-FILELIST-':  # A file was chosen from the listbox
+            try:
+                global selection
+                selection = values['-FILELIST-'][0]
+                window['-PROJECTNAME-'].update(selection)
+                window['-PROJECTNUMBER-'].update(projectSystem.readConfigFile(selection, key='projectNumber'))
+                window['-PROJECTCITY-'].update(projectSystem.readConfigFile(selection, key='projectCity'))
+                window['-PROJECTSTATE-'].update(projectSystem.readConfigFile(selection, key='projectState'))
+                window['-DESIGNERVERSION-'].update(projectSystem.readConfigFile(selection, key='designerVersion'))
+                window['-DESIGNFILE-'].update(projectSystem.readConfigFile(selection, key='designFile'))
+                window['-DESIGNFILEDATE-'].update(projectSystem.readConfigFile(selection, key='designFileDate'))
+                window['-AUTHOR-'].update(projectSystem.readConfigFile(selection, key='author'))
+                # print(selection)
+            except IndexError:
+                sg.Popup('No Projects Found, Create a new project or import an existing one to begin.', no_titlebar=True, keep_on_top=True)
+        elif event == '-OPENFOLDER-':
+            try:
+                os.startfile(projectSystem.rootProjectDir + '/' + selection)
+            except:
+                sg.Popup('No Project Selected', no_titlebar=True, keep_on_top=True)
+            print('Open Folder')
+        elif event == '-UPDATEPROJECTINFO-':
+            projectSystem.updateConfigFile(projectName=selection, newProjectName=values['-PROJECTNAME-'], projectNumber=values['-PROJECTNUMBER-'], projectCity=values['-PROJECTCITY-'], projectState=values['-PROJECTSTATE-'], designerVersion=values['-DESIGNERVERSION-'], designFile=values['-DESIGNFILE-'], designFileDate=values['-DESIGNFILEDATE-'], author=values['-AUTHOR-'])
+            print('Update Project Info')
+            print(values['-PROJECTNAME-'], values['-PROJECTNUMBER-'], values['-PROJECTCITY-'], values['-PROJECTSTATE-'], values['-DESIGNERVERSION-'], values['-DESIGNFILEDATE-'], values['-AUTHOR-'])
+            projectList = projectSystem.listProjects()
+            window['-FILELIST-'].update(projectList)
+        elif event == '-OPENDESIGN-':
+            print('Open Design')
+            try:
+                if values['-DESIGNERVERSION-'] != "":
+                    open_design_file(option=values['-DESIGNERVERSION-'])
+                else:
+                    print('No Designer Version Selected')
+                    open_design_file()
+            except Exception as e:
+                print(e)
+                sg.Popup('No Project Selected', no_titlebar=True, keep_on_top=True)
 
     window.close()

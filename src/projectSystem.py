@@ -1,79 +1,104 @@
 import os
+import json
 
-
-# rootProjectDir = "QSYS-Projects"
-documentsFolder = os.environ['HOMEPATH'] + "/Documents"
-qscDocsFolder = documentsFolder + "/QSC"
-rootProjectDir = qscDocsFolder + "/Q-Sys Projects"
-
-class Project:
-    #initilization of the project with the name and the path located in a folder named QSYS-Projects
-    def __init__(self, name):
-        self.name = name
-        self.path = f'{name}'
-        self.files = []
-        self.folders = []
-
-    # create a project with the name and the path then create the directory and the folders and files
-    def createProject(self):
-        if os.path.exists(rootProjectDir):
-            os.chdir(rootProjectDir)
-        else:
-            os.mkdir(rootProjectDir)
-            os.chdir(rootProjectDir)
-        if os.path.exists(self.path):
-            print(f'Project {self.name} already exists')
-        else:
-            os.mkdir(self.path)
-            os.chdir(self.path)
-            self.createProjectReadme()
-            for folder in self.folders:
-                os.mkdir(folder)
-            for file in self.files:
-                open(file, 'w')
-            self.createProjectReadme()
-
-    def removeProject(self):
-        if os.path.exists(rootProjectDir):
-            os.chdir(rootProjectDir)
-            if os.path.exists(self.path):
-                os.chdir(self.path)
-                for file in self.files:
-                    os.remove(file)
-                for folder in self.folders:
-                    os.rmdir(folder)
-                os.chdir(rootProjectDir)
-                os.rmdir(self.path)
-            else:
-                print(f'Project {self.name} does not exist')
-        else:
-            print(f'Project {self.name} does not exist')
-
-    def createProjectReadme(self):
-        with open('README.md', 'w') as readme:
-            readme.write(f'# {self.name}\n\n')
-            readme.write(f'Path: `{self.path}`\n\n')
-            readme.write(f'Files: `{self.files}`\n\n')
-            readme.write(f'Folders: `{self.folders}`\n')
-
-
-class ProjectManager:
+class ProjectSystem:
     def __init__(self):
         self.projects = self.listProjects()
+        self.documentsFolder = os.environ['HOMEPATH'] + "/Documents"
+        self.qscDocsFolder = self.documentsFolder + "/QSC"
+        self.rootProjectDir = self.qscDocsFolder + "/Q-Sys Projects"
 
     def listProjects(self):
-        if os.path.exists(rootProjectDir):
-            os.chdir(rootProjectDir)
+        projectsFolder = os.environ['HOMEPATH'] + "/Documents" + "/QSC" + "/Q-Sys Projects"
+        if os.path.exists(projectsFolder):
+            os.chdir(projectsFolder)
             return os.listdir()
         else:
             print('No projects found')
 
+    # read and return the info from the config file
+    def readConfigFile(self, projectName, key=None):
+        if key != None:
+            if os.path.exists(self.rootProjectDir):
+                os.chdir(self.rootProjectDir)
+                if os.path.exists(projectName):
+                    os.chdir(projectName)
+                    if os.path.exists('config.json'):
+                        with open('config.json', 'r') as config:
+                            data = json.load(config)
+                            try:
+                                return data[key]
+                            except KeyError:
+                                print(f'Key {key} does not exist')
+                    else:
+                        print(f'Project {projectName} does not have a config file')
+                else:
+                    print(f'Project {projectName} does not exist')
+            else:
+                print('No projects found')
+
+    #if json file exists in project folder read it and update it else create it
+    def updateConfigFile(self, projectName, newProjectName, projectNumber, projectCity, projectState, designerVersion, designFile, designFileDate, author):
+        # if project name dosent match newProjectName then rename the project folder
+        if projectName != newProjectName:
+            os.chdir(self.rootProjectDir)
+            os.rename(projectName, newProjectName)
+            projectName = newProjectName
+        if os.path.exists(self.rootProjectDir):
+            os.chdir(self.rootProjectDir)
+            if os.path.exists(projectName):
+                os.chdir(projectName)
+                if os.path.exists('config.json'):
+                    with open('config.json', 'r') as config:
+                        data = json.load(config)
+                        data['projectName'] = projectName
+                        data['projectNumber'] = projectNumber
+                        data['projectCity'] = projectCity
+                        data['projectState'] = projectState
+                        data['designerVersion'] = designerVersion
+                        data['designFileDate'] = designFileDate
+                        data['designFile'] = designFile
+                        data['author'] = author
+                    with open('config.json', 'w') as config:
+                        json.dump(data, config, indent=4)
+                else:
+                    with open('config.json', 'w') as config:
+                        data = {}
+                        data['projectName'] = projectName
+                        data['projectNumber'] = projectNumber
+                        data['projectCity'] = projectCity
+                        data['projectState'] = projectState
+                        data['designerVersion'] = designerVersion
+                        data['designFileDate'] = designFileDate
+                        data['designFile'] = designFile
+                        data['author'] = author
+                        json.dump(data, config, indent=4)
+            else:
+                print(f'Project {projectName} does not exist')
+        
+    # create a new project folder and config file
+    def createProject(self, projectName):
+        if os.path.exists(self.rootProjectDir):
+            os.chdir(self.rootProjectDir)
+            if not os.path.exists(projectName):
+                os.mkdir(projectName)
+                os.chdir(projectName)
+                with open('config.json', 'w') as config:
+                    data = {}
+                    data['project_name'] = projectName
+                    data['folders'] = ['.backup', 'resources']
+                    data['files'] = [f'{projectName}.qsys', 'config.json']
+                    json.dump(data, config, indent=4)
+            else:
+                print(f'Project {projectName} already exists')
+        else:
+            print('No projects found')
+
+# create a new project from a template
+# list all projects in the project directory
+# remove a project
+# list the details of a project
+# update the details of a project
+
 if __name__ == "__main__":
-    project = Project(input('Project Name: '))
-    project.folders = ["resources", ".backup-rev"]
-    project.files = ["testproject.qsys", "Readme.md"]
-    project.createProject()
-    projectManager = ProjectManager()
-    print(projectManager.projects)
-    project.removeProject()
-    print(projectManager.projects)
+    print('This is a module, please import it into your program.')

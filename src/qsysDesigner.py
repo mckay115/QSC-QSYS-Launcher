@@ -10,7 +10,7 @@ import PySimpleGUI as sg
 programFiles = os.environ['PROGRAMFILES']
 qsc_root_path = f'{programFiles}/QSC'
 
-# Try to asign the file if any
+# Try to assign the file if any
 def file_to_open():
     print('checking')
     if len(sys.argv) > 1:
@@ -51,9 +51,13 @@ def check_installed_versions(filter="Designer"):
 
 
 # Launch with Selected Options
-def open_design_file(option):
-    if file_to_open():
+def open_design_file(option=check_installed_versions()[-1], fileToOpen=None):
+    if fileToOpen == None:
+        file = fileToOpen
+        print(file)
+    else:
         file = sys.argv[1]
+    if fileToOpen != None:
         try:
             subprocess.Popen([f'{qsc_root_path}/{option}/Q-Sys Designer.exe', file])
         except FileNotFoundError:

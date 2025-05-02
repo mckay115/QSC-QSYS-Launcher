@@ -7,13 +7,13 @@ import {
   Button,
   Spinner,
   Text,
-  Badge,
   MessageBar,
   MessageBarBody,
   MessageBarTitle,
   useId,
   mergeClasses,
 } from "@fluentui/react-components";
+import { listen } from "@tauri-apps/api/event";
 
 // Type for QSys version
 interface QSysVersion {
@@ -153,6 +153,19 @@ function App() {
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const styles = useStyles();
   const messageId = useId("message");
+
+  // Listen for file-requested event
+  useEffect(() => {
+    const unlisten = listen<string>("file-requested", (event) => {
+      if (event.payload) {
+        setFilePath(event.payload);
+      }
+    });
+
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, []);
 
   // Get installed versions on component mount
   useEffect(() => {

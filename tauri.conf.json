@@ -79,14 +79,7 @@
         "webviewInstallMode": {
           "silent": true,
           "type": "embedBootstrapper"
-        },
-        "fileAssociations": [
-          {
-            "ext": "qsys",
-            "name": "Q-Sys Design File",
-            "description": "Q-Sys Design File"
-          }
-        ]
+        }
       }
     },
     "security": {

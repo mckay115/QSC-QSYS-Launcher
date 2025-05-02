@@ -1,4 +1,11 @@
-import { useEffect, useState, useRef, KeyboardEvent } from "react";
+import {
+  useEffect,
+  useState,
+  useRef,
+  KeyboardEvent,
+  memo,
+  useMemo,
+} from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import { appWindow } from "@tauri-apps/api/window";
 import {
@@ -69,6 +76,7 @@ const useStyles = makeStyles({
     overflow: "auto",
     flex: 1,
     padding: tokens.spacingVerticalXS,
+    willChange: "transform", // Hardware acceleration hint
   },
   versionItem: {
     display: "flex",
@@ -118,6 +126,46 @@ const useStyles = makeStyles({
   },
 });
 
+// Memoized version item component for better performance
+const VersionItem = memo(
+  ({
+    version,
+    index,
+    isSelected,
+    onClick,
+    onKeyDown,
+    setRef,
+  }: {
+    version: QSysVersion;
+    index: number;
+    isSelected: boolean;
+    onClick: () => void;
+    onKeyDown: (e: KeyboardEvent<HTMLDivElement>) => void;
+    setRef: (el: HTMLDivElement | null) => void;
+  }) => {
+    const styles = useStyles();
+
+    return (
+      <div
+        ref={setRef}
+        className={styles.versionItem}
+        onClick={onClick}
+        onKeyDown={onKeyDown}
+        tabIndex={0}
+        style={{
+          backgroundColor: isSelected
+            ? tokens.colorNeutralBackground2
+            : undefined,
+          borderColor: isSelected ? tokens.colorCompoundBrandStroke : undefined,
+        }}
+      >
+        <span className={styles.versionName}>{version.name}</span>
+        <span className={styles.versionType}>{version.exe_type}</span>
+      </div>
+    );
+  }
+);
+
 function App() {
   const [versions, setVersions] = useState<QSysVersion[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -132,6 +180,12 @@ function App() {
 
   const versionRefs = useRef<(HTMLDivElement | null)[]>([]);
   const styles = useStyles();
+
+  // Preload the logo image
+  useEffect(() => {
+    const img = new Image();
+    img.src = "/icon-small.png";
+  }, []);
 
   // Listen for system theme changes
   useEffect(() => {
@@ -156,8 +210,10 @@ function App() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedVersion]);
 
-  // Get installed versions on component mount
+  // Get installed versions on component mount - optimized with loading state cleanup
   useEffect(() => {
+    let isMounted = true;
+
     const getVersions = async () => {
       try {
         setLoading(true);
@@ -165,6 +221,8 @@ function App() {
         const installedVersions = await invoke<QSysVersion[]>(
           "get_installed_versions"
         );
+
+        if (!isMounted) return;
 
         setVersions(installedVersions);
 
@@ -176,6 +234,8 @@ function App() {
         // Check if we have a file path argument
         try {
           const args = await appWindow.onceReady();
+          if (!isMounted) return;
+
           if (args && args.payload && typeof args.payload === "string") {
             setFilePath(args.payload);
           }
@@ -183,73 +243,83 @@ function App() {
           console.error("Failed to get file path:", e);
         }
       } catch (err) {
+        if (!isMounted) return;
         setError(`${err}`);
         console.error(err);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     getVersions();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  // Focus on selected version when it changes
+  // Focus on selected version when it changes - with requestAnimationFrame for smoothness
   useEffect(() => {
     if (selectedVersion !== null && versionRefs.current[selectedVersion]) {
-      versionRefs.current[selectedVersion]?.focus();
+      requestAnimationFrame(() => {
+        versionRefs.current[selectedVersion]?.focus();
+      });
     }
   }, [selectedVersion]);
 
-  // Launch selected application
-  const launchSelectedVersion = async () => {
-    if (selectedVersion === null) return;
+  // Launch selected application - memoized to avoid recreation on renders
+  const launchSelectedVersion = useMemo(
+    () => async () => {
+      if (selectedVersion === null) return;
 
-    try {
-      setLaunching(true);
-      await invoke("launch_application", {
-        path: versions[selectedVersion].path,
-        filePath,
-      });
+      try {
+        setLaunching(true);
+        await invoke("launch_application", {
+          path: versions[selectedVersion].path,
+          filePath,
+        });
 
-      // Close the app after launching with a slight delay
-      setTimeout(() => appWindow.close(), 1000);
-    } catch (err) {
-      setError(`Failed to launch application: ${err}`);
-      console.error(err);
-      setLaunching(false);
-    }
-  };
+        // Close the app after launching with a slight delay
+        setTimeout(() => appWindow.close(), 500); // Reduced timeout for faster UX
+      } catch (err) {
+        setError(`Failed to launch application: ${err}`);
+        console.error(err);
+        setLaunching(false);
+      }
+    },
+    [selectedVersion, versions, filePath]
+  );
 
-  // Handle keyboard navigation
-  const handleVersionKeyDown = (
-    e: KeyboardEvent<HTMLDivElement>,
-    index: number
-  ) => {
-    switch (e.key) {
-      case "ArrowDown":
-        e.preventDefault();
-        if (index < versions.length - 1) {
-          setSelectedVersion(index + 1);
-        }
-        break;
-      case "ArrowUp":
-        e.preventDefault();
-        if (index > 0) {
-          setSelectedVersion(index - 1);
-        }
-        break;
-      case "Enter":
-        e.preventDefault();
-        launchSelectedVersion();
-        break;
-    }
-  };
+  // Handle keyboard navigation - memoized for performance
+  const createKeyDownHandler =
+    (index: number) => (e: KeyboardEvent<HTMLDivElement>) => {
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          if (index < versions.length - 1) {
+            setSelectedVersion(index + 1);
+          }
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          if (index > 0) {
+            setSelectedVersion(index - 1);
+          }
+          break;
+        case "Enter":
+          e.preventDefault();
+          launchSelectedVersion();
+          break;
+      }
+    };
 
   return (
     <FluentProvider theme={isDarkMode ? webDarkTheme : webLightTheme}>
       <div className={styles.container}>
         <header className={styles.header}>
-          <img src="/app-icon.png" alt="QSC Q-Sys" className={styles.logo} />
+          <img src="/icon-small.png" alt="QSC Q-Sys" className={styles.logo} />
           <Title3 className={styles.title}>Q-Sys Launcher</Title3>
         </header>
 
@@ -302,32 +372,18 @@ function App() {
                 </Text>
               ) : (
                 versions.map((version, index) => (
-                  <div
+                  <VersionItem
                     key={version.path}
-                    ref={(el) => (versionRefs.current[index] = el)}
-                    className={styles.versionItem}
+                    version={version}
+                    index={index}
+                    isSelected={selectedVersion === index}
                     onClick={() => {
                       setSelectedVersion(index);
                       launchSelectedVersion();
                     }}
-                    onKeyDown={(e) => handleVersionKeyDown(e, index)}
-                    tabIndex={0}
-                    style={{
-                      backgroundColor:
-                        selectedVersion === index
-                          ? tokens.colorNeutralBackground2
-                          : undefined,
-                      borderColor:
-                        selectedVersion === index
-                          ? tokens.colorCompoundBrandStroke
-                          : undefined,
-                    }}
-                  >
-                    <span className={styles.versionName}>{version.name}</span>
-                    <span className={styles.versionType}>
-                      {version.exe_type}
-                    </span>
-                  </div>
+                    onKeyDown={createKeyDownHandler(index)}
+                    setRef={(el) => (versionRefs.current[index] = el)}
+                  />
                 ))
               )}
             </div>

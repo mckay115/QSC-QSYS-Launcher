@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "QSC Q-Sys Launcher",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "identifier": "com.qsc.qlauncher",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -34,12 +34,12 @@
       "icons/128x128.png",
       "icons/128x128@2x.png",
       "icons/icon.icns",
-      "icons/icon.ico"
+      "../public/logo_OEB_icon.ico"
     ],
     "windows": {
       "digestAlgorithm": "sha256",
       "nsis": {
-        "installerIcon": "icons/icon.ico",
+        "installerIcon": "../public/logo_OEB_icon.ico",
         "installMode": "perMachine"
       }
     }

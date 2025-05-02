@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, memo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import {
   makeStyles,
@@ -22,6 +22,14 @@ interface QSysVersion {
   exe_type: string;
 }
 
+// Helper function to extract file name without extension
+const getFileNameWithoutExtension = (filePath: string): string => {
+  // Extract just the file name without the directory path
+  const fileName = filePath.split(/[\\/]/).pop() || "";
+  // Remove the extension
+  return fileName.replace(/\.[^/.]+$/, "");
+};
+
 // Custom styles using Fluent UI - Windows native styling
 const useStyles = makeStyles({
   container: {
@@ -40,6 +48,16 @@ const useStyles = makeStyles({
     marginBottom: "16px",
     flexShrink: 0,
   },
+  logo: {
+    width: "32px",
+    height: "32px",
+    marginRight: "8px",
+  },
+  titleRow: {
+    display: "flex",
+    alignItems: "center",
+    marginBottom: "8px",
+  },
   headerTitle: {
     fontSize: "18px",
     fontWeight: tokens.fontWeightSemibold,
@@ -55,14 +73,12 @@ const useStyles = makeStyles({
     backgroundColor: tokens.colorNeutralBackground2,
     ...shorthands.padding("8px", "12px"),
     ...shorthands.borderRadius(tokens.borderRadiusMedium),
-    fontSize: "12px",
-    fontFamily: "monospace",
-    wordBreak: "break-all",
+    fontSize: "14px",
+    fontWeight: tokens.fontWeightSemibold,
     marginBottom: "16px",
-    maxHeight: "40px",
-    overflow: "auto",
     color: tokens.colorNeutralForeground1,
     border: `1px solid ${tokens.colorNeutralStroke2}`,
+    display: "inline-block",
   },
   content: {
     flex: "1 1 auto",
@@ -72,12 +88,14 @@ const useStyles = makeStyles({
     display: "flex",
     flexDirection: "column",
     minHeight: "200px", // Ensure minimum height for content area
+    willChange: "transform", // Hardware acceleration hint
   },
   versionsList: {
     display: "flex",
     flexDirection: "column",
     gap: "8px",
     width: "100%",
+    willChange: "transform", // Hardware acceleration hint
   },
   versionButton: {
     display: "flex",
@@ -145,6 +163,39 @@ const useStyles = makeStyles({
   },
 });
 
+// Memoized version button component for better performance
+const VersionButton = memo(
+  ({
+    version,
+    isSelected,
+    onClick,
+    onKeyDown,
+  }: {
+    version: QSysVersion;
+    isSelected: boolean;
+    onClick: () => void;
+    onKeyDown: (e: React.KeyboardEvent) => void;
+  }) => {
+    const styles = useStyles();
+
+    return (
+      <div
+        className={mergeClasses(
+          styles.versionButton,
+          isSelected && styles.versionButtonSelected
+        )}
+        onClick={onClick}
+        onKeyDown={onKeyDown}
+        tabIndex={0}
+        role="button"
+        aria-selected={isSelected}
+      >
+        <span className={styles.versionName}>{version.name}</span>
+      </div>
+    );
+  }
+);
+
 function App() {
   const [versions, setVersions] = useState<QSysVersion[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -154,21 +205,35 @@ function App() {
   const styles = useStyles();
   const messageId = useId("message");
 
+  // Preload images for performance
+  useEffect(() => {
+    const img1 = new Image();
+    img1.src = "/icon-small.png";
+
+    const img2 = new Image();
+    img2.src = "/icon.png";
+  }, []);
+
   // Listen for file-requested event
   useEffect(() => {
+    let mounted = true;
+
     const unlisten = listen<string>("file-requested", (event) => {
-      if (event.payload) {
+      if (event.payload && mounted) {
         setFilePath(event.payload);
       }
     });
 
     return () => {
+      mounted = false;
       unlisten.then((fn) => fn());
     };
   }, []);
 
-  // Get installed versions on component mount
+  // Get installed versions on component mount - optimized with cleanup
   useEffect(() => {
+    let mounted = true;
+
     const getVersions = async () => {
       try {
         setLoading(true);
@@ -178,6 +243,7 @@ function App() {
           "get_installed_versions"
         );
 
+        if (!mounted) return;
         setVersions(installedVersions);
 
         // Auto-select first version if available (which is now the newest one)
@@ -185,73 +251,107 @@ function App() {
           setSelectedVersion(installedVersions[0].path);
         }
       } catch (err) {
+        if (!mounted) return;
         setError(`Failed to get installed versions: ${err}`);
         console.error(err);
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     getVersions();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  // Launch selected application
-  const launchApplication = async (path: string) => {
-    try {
-      setLoading(true);
-      await invoke("launch_application", {
-        path,
-        filePath,
-      });
-      // Will be closed by backend
-    } catch (err) {
-      setError(`Failed to launch application: ${err}`);
-      console.error(err);
-      setLoading(false);
-    }
-  };
+  // Launch selected application - memoized to prevent recreations
+  const launchApplication = useCallback(
+    async (path: string) => {
+      try {
+        await invoke("launch_application", {
+          path,
+          filePath,
+        });
 
-  // Launch the selected version
-  const handleLaunch = () => {
+        // Close the app after successful launch
+        await invoke("close_application");
+      } catch (err) {
+        setError(`Failed to launch: ${err}`);
+        console.error(err);
+      }
+    },
+    [filePath]
+  );
+
+  // Handle launch button click
+  const handleLaunch = useCallback(() => {
     if (selectedVersion) {
       launchApplication(selectedVersion);
     }
-  };
+  }, [selectedVersion, launchApplication]);
 
-  // Close the application
-  const handleCancel = async () => {
+  // Handle cancel button click
+  const handleCancel = useCallback(async () => {
     try {
-      await invoke("close_window");
+      await invoke("close_application");
     } catch (err) {
-      console.error("Failed to close window:", err);
+      console.error("Failed to close application:", err);
     }
-  };
+  }, []);
 
-  // Handle keyboard navigation
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && selectedVersion) {
-      handleLaunch();
-    } else if (e.key === "Escape") {
-      handleCancel();
-    }
-  };
+  // Handle keyboard events
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleCancel();
+      } else if (e.key === "Enter" && selectedVersion) {
+        handleLaunch();
+      }
+    },
+    [handleCancel, handleLaunch, selectedVersion]
+  );
+
+  // Create key handler for version item
+  const createVersionKeyHandler =
+    (version: QSysVersion) => (e: React.KeyboardEvent) => {
+      if (e.key === "Enter") {
+        setSelectedVersion(version.path);
+        launchApplication(version.path);
+      }
+      handleKeyDown(e);
+    };
 
   return (
-    <div
-      className={styles.container}
-      onKeyDown={handleKeyDown}
-      tabIndex={0} // Make div focusable for keyboard events
-    >
+    <div className={styles.container} onKeyDown={handleKeyDown}>
       <div className={styles.header}>
-        <Text className={styles.headerTitle}>QSC Q-Sys Launcher</Text>
-        <Text className={styles.headerSubtitle}>
-          Select the Designer version to{" "}
-          {filePath ? "open file with" : "launch"}:
-        </Text>
+        <div className={styles.titleRow}>
+          <img src="/icon-small.png" alt="QSC" className={styles.logo} />
+          <span className={styles.headerTitle}>Q-Sys Launcher</span>
+        </div>
+        <span className={styles.headerSubtitle}>
+          {filePath
+            ? "Select Q-Sys Designer version to open file:"
+            : "Select Q-Sys Designer version to launch:"}
+        </span>
 
         {filePath && (
-          <div className={styles.filePath} title={filePath}>
-            {filePath}
+          <div className={styles.filePath}>
+            {getFileNameWithoutExtension(filePath)}
+          </div>
+        )}
+
+        {error && (
+          <div className={styles.errorContainer}>
+            <MessageBar id={messageId}>
+              <MessageBarBody>
+                <MessageBarTitle>Error</MessageBarTitle>
+                {error}
+              </MessageBarBody>
+            </MessageBar>
           </div>
         )}
       </div>
@@ -259,60 +359,44 @@ function App() {
       <div className={styles.content}>
         {loading ? (
           <div className={styles.loadingContainer}>
-            <Spinner size="small" label="Loading versions..." />
+            <Spinner size="medium" />
+            <Text>Loading installed versions...</Text>
           </div>
-        ) : error ? (
-          <div className={styles.errorContainer}>
-            <MessageBar id={messageId} intent="error">
-              <MessageBarBody>
-                <MessageBarTitle>Error</MessageBarTitle>
-                {error}
-              </MessageBarBody>
-            </MessageBar>
+        ) : versions.length === 0 ? (
+          <div className={styles.noVersionsContainer}>
+            <Text>No Q-Sys Designer installations found</Text>
           </div>
         ) : (
-          <>
-            {versions.length === 0 ? (
-              <div className={styles.noVersionsContainer}>
-                <Text>No QSC Designer versions found on this computer.</Text>
-              </div>
-            ) : (
-              <div className={styles.versionsList}>
-                {versions.map((version) => (
-                  <div
-                    key={version.path}
-                    className={mergeClasses(
-                      styles.versionButton,
-                      selectedVersion === version.path &&
-                        styles.versionButtonSelected
-                    )}
-                    onClick={() => setSelectedVersion(version.path)}
-                    tabIndex={0} // Make focusable for keyboard navigation
-                    role="button"
-                    aria-selected={selectedVersion === version.path}
-                  >
-                    <div className={styles.versionName}>{version.name}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
+          <div className={styles.versionsList}>
+            {versions.map((version) => (
+              <VersionButton
+                key={version.path}
+                version={version}
+                isSelected={selectedVersion === version.path}
+                onClick={() => {
+                  setSelectedVersion(version.path);
+                  launchApplication(version.path);
+                }}
+                onKeyDown={createVersionKeyHandler(version)}
+              />
+            ))}
+          </div>
         )}
       </div>
 
       <div className={styles.footer}>
         <Button
           appearance="secondary"
-          onClick={handleCancel}
           className={styles.actionButton}
+          onClick={handleCancel}
         >
           Cancel
         </Button>
         <Button
           appearance="primary"
-          onClick={handleLaunch}
-          disabled={!selectedVersion || loading}
           className={styles.actionButton}
+          disabled={!selectedVersion || loading}
+          onClick={handleLaunch}
         >
           Launch
         </Button>

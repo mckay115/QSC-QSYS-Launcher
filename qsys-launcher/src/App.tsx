@@ -14,6 +14,9 @@ import {
   mergeClasses,
 } from "@fluentui/react-components";
 import { listen } from "@tauri-apps/api/event";
+// Import images directly
+import iconSmall from "@assets/img/icon-small.png";
+import iconLarge from "@assets/img/icon.png";
 
 // Type for QSys version
 interface QSysVersion {
@@ -208,10 +211,10 @@ function App() {
   // Preload images for performance
   useEffect(() => {
     const img1 = new Image();
-    img1.src = "/icon-small.png";
+    img1.src = iconSmall;
 
     const img2 = new Image();
-    img2.src = "/icon.png";
+    img2.src = iconLarge;
   }, []);
 
   // Listen for file-requested event
@@ -329,7 +332,7 @@ function App() {
     <div className={styles.container} onKeyDown={handleKeyDown}>
       <div className={styles.header}>
         <div className={styles.titleRow}>
-          <img src="/icon-small.png" alt="QSC" className={styles.logo} />
+          <img src={iconSmall} alt="QSC" className={styles.logo} />
           <span className={styles.headerTitle}>Q-Sys Launcher</span>
         </div>
         <span className={styles.headerSubtitle}>

@@ -1,0 +1,117 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/tooling/cli/schema.json",
+  "build": {
+    "devPath": "http://localhost:5173",
+    "distDir": "../dist",
+    "withGlobalTauri": true
+  },
+  "package": {
+    "productName": "QSC Q-Sys Launcher",
+    "version": "1.0.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "shell": {
+        "all": false,
+        "open": true,
+        "execute": true,
+        "scope": [
+          {
+            "name": "run-qsys",
+            "cmd": "C:\\Program Files\\QSC\\*\\Q-Sys Designer.exe",
+            "args": true
+          },
+          {
+            "name": "run-uci",
+            "cmd": "C:\\Program Files\\QSC\\*\\uci.exe",
+            "args": true
+          },
+          {
+            "name": "run-admin",
+            "cmd": "C:\\Program Files\\QSC\\*\\Q-Sys Administrator.exe",
+            "args": true
+          }
+        ]
+      },
+      "fs": {
+        "readDir": true,
+        "exists": true,
+        "scope": ["C:\\Program Files\\QSC\\**"]
+      },
+      "window": {
+        "all": false,
+        "close": true,
+        "setSize": true,
+        "setMinSize": true
+      },
+      "os": {
+        "all": false
+      },
+      "path": {
+        "all": true
+      },
+      "process": {
+        "all": false,
+        "exit": true
+      },
+      "protocol": {
+        "all": false,
+        "asset": true,
+        "assetScope": ["**"]
+      }
+    },
+    "bundle": {
+      "active": true,
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ],
+      "identifier": "com.qsc.launcher",
+      "targets": "all",
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": "",
+        "webviewInstallMode": {
+          "silent": true,
+          "type": "embedBootstrapper"
+        },
+        "fileAssociations": [
+          {
+            "ext": "qsys",
+            "name": "Q-Sys Design File",
+            "description": "Q-Sys Design File"
+          }
+        ]
+      }
+    },
+    "security": {
+      "csp": null
+    },
+    "updater": {
+      "active": false
+    },
+    "windows": [
+      {
+        "center": true,
+        "decorations": true,
+        "width": 450,
+        "height": 550,
+        "resizable": false,
+        "title": "QSC Q-Sys Launcher",
+        "theme": "System",
+        "transparent": false,
+        "maximized": false,
+        "visible": true
+      }
+    ],
+    "systemTray": {
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": true
+    }
+  }
+} 

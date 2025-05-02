@@ -1,3 +1,71 @@
+# QSC Q-Sys Launcher
+
+A modern, Windows-native launcher for QSC Q-Sys software that makes it easy to select which version of Q-Sys software to run.
+
+![QSC Q-Sys Launcher](screenshots/launcher-screenshot.png)
+
+## Features
+
+- **Clean Windows-native UI**: Seamlessly integrates with Windows using Fluent UI design
+- **Version Detection**: Automatically detects all installed Q-Sys software versions
+- **Smart Sorting**: Prioritizes Designer versions and sorts numerically
+- **File Association**: Open .qsys files directly by associating them with the launcher
+- **Keyboard Navigation**: Use arrow keys, Enter to launch, Escape to cancel
+- **High DPI Support**: Proper scaling on high-resolution displays
+
+## Usage
+
+1. **Launch the application** either from the Start menu or by opening a .qsys file
+2. **Select a version** from the list of installed Q-Sys software
+3. **Launch** the selected version by clicking on it, pressing Enter, or clicking the Launch button
+
+### Keyboard Shortcuts
+
+- **Arrow Up/Down**: Navigate through versions
+- **Enter**: Launch selected version
+- **Escape**: Close the launcher
+
+## Technical Details
+
+This application is built with:
+
+- **Tauri 2.0**: Lightweight, secure framework for building desktop apps
+- **React**: Frontend UI framework
+- **Fluent UI**: Microsoft's design system for Windows-like native experience
+- **Rust**: Backend for system integration and file handling
+
+## Development
+
+### Prerequisites
+
+- Node.js (v16+)
+- Rust (latest stable)
+- Tauri CLI
+
+### Setup
+
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Run in development mode: `npm run tauri dev`
+
+### Building
+
+To build the application:
+
+```
+npm run tauri build
+```
+
+The installer will be created in the `target/release/bundle` directory.
+
+## License
+
+See LICENSE file for details.
+
+---
+
+*QSC and Q-Sys are trademarks of QSC Audio Products, LLC. This application is not affiliated with or endorsed by QSC.*
+
 # QSC-QSYS Version Selection Launcher
  Launcher program to select which version of the Q-Sys software to launch.
 <!--

@@ -1,8 +1,11 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { resolve } from "path";
+import path from "path";
+import { fileURLToPath } from "url";
 
-// @ts-expect-error process is a nodejs global
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vitejs.dev/config/
@@ -12,8 +15,7 @@ export default defineConfig(async () => ({
   // Add resolve for assets
   resolve: {
     alias: {
-      "@": resolve(__dirname, "src"),
-      "@assets": resolve(__dirname, "public"),
+      "@": path.resolve(__dirname, "src"),
     },
   },
 

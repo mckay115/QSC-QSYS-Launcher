@@ -13,10 +13,10 @@ import {
   useId,
   mergeClasses,
 } from "@fluentui/react-components";
-import { listen } from "@tauri-apps/api/event";
-// Import images directly
-import iconSmall from "@assets/img/icon-small.png";
-import iconLarge from "@assets/img/icon.png";
+
+// Public folder assets (served at root path)
+const iconSmall = "/img/icon-small.png";
+const iconLarge = "/img/icon.png";
 
 // Type for QSys version
 interface QSysVersion {
@@ -25,12 +25,32 @@ interface QSysVersion {
   exe_type: string;
 }
 
+// Type for file info from backend
+interface FileInfo {
+  path: string;
+  version: string | null;
+}
+
 // Helper function to extract file name without extension
 const getFileNameWithoutExtension = (filePath: string): string => {
   // Extract just the file name without the directory path
   const fileName = filePath.split(/[\\/]/).pop() || "";
   // Remove the extension
   return fileName.replace(/\.[^/.]+$/, "");
+};
+
+// Helper function to check if file version matches installed version (first two numbers)
+const versionsMatch = (fileVersion: string | null, installedVersionName: string): boolean => {
+  if (!fileVersion) return false;
+  
+  // Extract first two numbers from file version (e.g., "9.13" from "9.13.1.0")
+  const fileMatch = fileVersion.match(/^(\d+\.\d+)/);
+  if (!fileMatch) return false;
+  const filePrefix = fileMatch[1];
+  
+  // Check if installed version name contains this prefix
+  // Installed versions are like "Q-SYS Designer 9.13" or just "9.13"
+  return installedVersionName.includes(filePrefix);
 };
 
 // Custom styles using Fluent UI - Windows native styling
@@ -76,12 +96,25 @@ const useStyles = makeStyles({
     backgroundColor: tokens.colorNeutralBackground2,
     ...shorthands.padding("8px", "12px"),
     ...shorthands.borderRadius(tokens.borderRadiusMedium),
-    fontSize: "14px",
-    fontWeight: tokens.fontWeightSemibold,
     marginBottom: "16px",
-    color: tokens.colorNeutralForeground1,
     border: `1px solid ${tokens.colorNeutralStroke2}`,
     display: "inline-block",
+  },
+  fileName: {
+    fontSize: "14px",
+    fontWeight: tokens.fontWeightSemibold,
+    color: tokens.colorNeutralForeground1,
+    display: "block",
+  },
+  fileVersion: {
+    fontSize: "12px",
+    color: tokens.colorNeutralForeground3,
+    marginTop: "2px",
+    display: "block",
+  },
+  versionButtonMatched: {
+    backgroundColor: tokens.colorBrandBackground2,
+    ...shorthands.borderColor(tokens.colorBrandStroke1),
   },
   content: {
     flex: "1 1 auto",
@@ -171,11 +204,13 @@ const VersionButton = memo(
   ({
     version,
     isSelected,
+    isMatched,
     onClick,
     onKeyDown,
   }: {
     version: QSysVersion;
     isSelected: boolean;
+    isMatched: boolean;
     onClick: () => void;
     onKeyDown: (e: React.KeyboardEvent) => void;
   }) => {
@@ -185,7 +220,8 @@ const VersionButton = memo(
       <div
         className={mergeClasses(
           styles.versionButton,
-          isSelected && styles.versionButtonSelected
+          isSelected && styles.versionButtonSelected,
+          isMatched && !isSelected && styles.versionButtonMatched
         )}
         onClick={onClick}
         onKeyDown={onKeyDown}
@@ -204,6 +240,7 @@ function App() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [filePath, setFilePath] = useState<string | null>(null);
+  const [fileVersion, setFileVersion] = useState<string | null>(null);
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const styles = useStyles();
   const messageId = useId("message");
@@ -217,19 +254,28 @@ function App() {
     img2.src = iconLarge;
   }, []);
 
-  // Listen for file-requested event
+  // Get file info from backend on mount
   useEffect(() => {
     let mounted = true;
 
-    const unlisten = listen<string>("file-requested", (event) => {
-      if (event.payload && mounted) {
-        setFilePath(event.payload);
+    const getFileInfo = async () => {
+      try {
+        const fileInfo = await invoke<FileInfo>("get_file_info");
+        console.log("Received file info:", fileInfo);
+        if (mounted && fileInfo.path) {
+          setFilePath(fileInfo.path);
+          setFileVersion(fileInfo.version);
+          console.log("Set fileVersion to:", fileInfo.version);
+        }
+      } catch (err) {
+        console.error("Error getting file info:", err);
       }
-    });
+    };
+
+    getFileInfo();
 
     return () => {
       mounted = false;
-      unlisten.then((fn) => fn());
     };
   }, []);
 
@@ -249,9 +295,12 @@ function App() {
         if (!mounted) return;
         setVersions(installedVersions);
 
-        // Auto-select first version if available (which is now the newest one)
-        if (installedVersions.length > 0) {
-          setSelectedVersion(installedVersions[0].path);
+        // Auto-select matching version if there's a file version, otherwise no auto-selection
+        if (installedVersions.length > 0 && fileVersion) {
+          const matchingVersion = installedVersions.find(v => versionsMatch(fileVersion, v.name));
+          if (matchingVersion) {
+            setSelectedVersion(matchingVersion.path);
+          }
         }
       } catch (err) {
         if (!mounted) return;
@@ -343,7 +392,10 @@ function App() {
 
         {filePath && (
           <div className={styles.filePath}>
-            {getFileNameWithoutExtension(filePath)}
+            <span className={styles.fileName}>{getFileNameWithoutExtension(filePath)}</span>
+            {fileVersion && (
+              <span className={styles.fileVersion}>Version: {fileVersion}</span>
+            )}
           </div>
         )}
 
@@ -376,6 +428,7 @@ function App() {
                 key={version.path}
                 version={version}
                 isSelected={selectedVersion === version.path}
+                isMatched={versionsMatch(fileVersion, version.name)}
                 onClick={() => {
                   setSelectedVersion(version.path);
                   launchApplication(version.path);

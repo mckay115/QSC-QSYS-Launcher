@@ -1,11 +1,10 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs;
 use std::path::Path;
 use std::process::Command;
-use std::sync::Arc;
-use tauri::Emitter;
 use tauri::Manager;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -51,10 +50,23 @@ fn get_installed_versions() -> Vec<QSysVersion> {
         }
     }
 
-    // Sort versions in descending order (highest/newest version at the top)
-    versions.sort_by(|a, b| b.name.to_lowercase().cmp(&a.name.to_lowercase()));
+    // Sort versions in ascending order using semantic versioning
+    versions.sort_by(|a, b| {
+        let a_nums = extract_version_numbers(&a.name);
+        let b_nums = extract_version_numbers(&b.name);
+        a_nums.cmp(&b_nums)
+    });
 
     versions
+}
+
+// Helper function to extract version numbers for proper sorting
+fn extract_version_numbers(name: &str) -> Vec<u32> {
+    // Find all numbers in the version string (e.g., "Q-SYS Designer 9.13" -> [9, 13])
+    let re = Regex::new(r"(\d+)").unwrap();
+    re.find_iter(name)
+        .filter_map(|m| m.as_str().parse::<u32>().ok())
+        .collect()
 }
 
 // Function to launch the selected version with an optional file
@@ -106,40 +118,79 @@ fn get_file_arg() -> Option<String> {
     None
 }
 
-// Simple struct to store file path in app state
-struct FilePath(String);
+// Extract version number from .qsys file content
+fn get_version_from_file(file_path: &str) -> Option<String> {
+    // Read file as binary
+    let content = match fs::read(file_path) {
+        Ok(bytes) => bytes,
+        Err(e) => {
+            println!("Error reading file: {}", e);
+            return None;
+        }
+    };
+
+    // Search for Version=X.X.X.X pattern in binary content
+    // Convert to string lossy to handle any encoding
+    let content_str = String::from_utf8_lossy(&content);
+    
+    // Use regex to find Version=X.X.X.X pattern (with or without quotes)
+    let re = Regex::new(r#"Version="?(\d+(\.\d+)*)"?"#).unwrap();
+    
+    if let Some(captures) = re.captures(&content_str) {
+        if let Some(version_match) = captures.get(1) {
+            return Some(version_match.as_str().to_string());
+        }
+    }
+    
+    None
+}
+
+// Struct to hold file info passed to frontend
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct FileInfo {
+    path: String,
+    version: Option<String>,
+}
+
+// Command to get file info from app state
+#[tauri::command]
+fn get_file_info(state: tauri::State<FileInfo>) -> FileInfo {
+    (*state).clone()
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
-            // Get file arg if present
-            if let Some(file_path) = get_file_arg() {
-                // Store the file path in app state
+            // Get file arg if present and create FileInfo
+            let file_info = if let Some(file_path) = get_file_arg() {
                 println!("Passing file argument: {}", file_path);
 
-                // Create app state with file path
-                app.manage(FilePath(file_path.clone()));
+                // Extract version from the .qsys file
+                let file_version = get_version_from_file(&file_path);
+                if let Some(ref version) = file_version {
+                    println!("Detected file version: {}", version);
+                }
 
-                // Get a handle to the app to emit events
-                let app_handle = app.app_handle().clone();
-                let file_path_arc = Arc::new(file_path);
+                FileInfo {
+                    path: file_path,
+                    version: file_version,
+                }
+            } else {
+                FileInfo::default()
+            };
 
-                // Set a timeout to emit the file path to the frontend - reduced delay
-                let file_path_clone = Arc::clone(&file_path_arc);
-                std::thread::spawn(move || {
-                    std::thread::sleep(std::time::Duration::from_millis(500));
-                    let _ = app_handle.emit("file-requested", (*file_path_clone).clone());
-                });
-            }
+            // Always manage state (even if empty)
+            app.manage(file_info);
 
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             get_installed_versions,
             launch_application,
-            close_application
+            close_application,
+            get_file_info
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
